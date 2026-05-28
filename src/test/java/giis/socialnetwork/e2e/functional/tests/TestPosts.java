@@ -2,17 +2,13 @@ package giis.socialnetwork.e2e.functional.tests;
 
 import giis.socialnetwork.e2e.functional.common.BaseLoggedClass;
 import giis.socialnetwork.e2e.functional.common.ElementNotFoundException;
+import giis.socialnetwork.e2e.functional.pages.MainPage;
+import giis.socialnetwork.e2e.functional.pages.SignupPage;
 import giis.retorch.annotations.AccessMode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
-/**
- * Validates post-composition flows through the Social Network web UI.
- */
 class TestPosts extends BaseLoggedClass {
 
     @AccessMode(resID = "user", concurrency = 1, sharing = false, accessMode = "READWRITE")
@@ -23,22 +19,10 @@ class TestPosts extends BaseLoggedClass {
     @DisplayName("Post compose form is visible on the main feed page after login")
     void testComposeFormVisible() throws ElementNotFoundException {
         long ts = System.currentTimeMillis();
-        String username = "poster" + ts;
-
-        navUtils.goToSignupPage(driver, waiter);
-        registerViaForm("Post", "Er", username, "pwd" + ts);
-        loginViaForm(username, "pwd" + ts);
-
-        // The compose area is on main.html
-        waiter.waitUntil(
-                ExpectedConditions.visibilityOfElementLocated(By.id("post-content")),
-                "Post textarea must be visible on the main page");
-        waiter.waitUntil(
-                ExpectedConditions.visibilityOfElementLocated(By.id("create-post")),
-                "Create post button must be visible on the main page");
-
-        WebElement textarea = driver.findElement(By.id("post-content"));
-        Assertions.assertTrue(textarea.isDisplayed(), "Post compose textarea must be displayed");
+        MainPage main = new SignupPage(driver, waiter, sutUrl).open()
+                .register("Post", "Er", "poster" + ts, "pwd" + ts)
+                .login("poster" + ts, "pwd" + ts);
+        Assertions.assertTrue(main.isComposeFormVisible(), "Post compose form must be visible on the main page");
     }
 
     @AccessMode(resID = "user", concurrency = 1, sharing = false, accessMode = "READWRITE")
@@ -52,23 +36,11 @@ class TestPosts extends BaseLoggedClass {
         long ts = System.currentTimeMillis();
         String username = "timelineui" + ts;
         String postText = "UI test post " + ts;
-
-        navUtils.goToSignupPage(driver, waiter);
-        registerViaForm("Timeline", "Ui", username, "pwd" + ts);
-        loginViaForm(username, "pwd" + ts);
-
-        // Fill the post textarea and click Create
-        waiter.waitUntil(
-                ExpectedConditions.visibilityOfElementLocated(By.id("post-content")),
-                "Post textarea must be ready");
-        driver.findElement(By.id("post-content")).sendKeys(postText);
-        driver.findElement(By.id("create-post")).click();
-
-        // Navigate to main.html and wait for the post to appear in the timeline with retries
-        navUtils.goToMainPage(driver, waiter);
-        waiter.waitForPostText(postText, driver);
-
-        Assertions.assertTrue(driver.getPageSource().contains(postText),
-                "Composed post '" + postText + "' must appear in the timeline after creation");
+        MainPage main = new SignupPage(driver, waiter, sutUrl).open()
+                .register("Timeline", "Ui", username, "pwd" + ts)
+                .login(username, "pwd" + ts);
+        main.composePost(postText).open().waitForPost(postText);
+        Assertions.assertTrue(main.hasPostText(postText),
+                "Composed post must appear in the timeline after creation");
     }
 }

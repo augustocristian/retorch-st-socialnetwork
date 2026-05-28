@@ -2,16 +2,14 @@ package giis.socialnetwork.e2e.functional.tests;
 
 import giis.socialnetwork.e2e.functional.common.BaseLoggedClass;
 import giis.socialnetwork.e2e.functional.common.ElementNotFoundException;
+import giis.socialnetwork.e2e.functional.pages.LoginPage;
+import giis.socialnetwork.e2e.functional.pages.MainPage;
+import giis.socialnetwork.e2e.functional.pages.SignupPage;
 import giis.retorch.annotations.AccessMode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
-/**
- * Validates user registration and login flows through the Social Network web UI.
- */
 class TestLogin extends BaseLoggedClass {
 
     @AccessMode(resID = "user", concurrency = 1, sharing = false, accessMode = "READWRITE")
@@ -21,15 +19,9 @@ class TestLogin extends BaseLoggedClass {
     @DisplayName("Submitting the signup form registers the user and redirects to the login page")
     void testRegisterViaForm() throws ElementNotFoundException {
         long ts = System.currentTimeMillis();
-        navUtils.goToSignupPage(driver, waiter);
-
-        registerViaForm("Alice", "Test", "alice" + ts, "pwd" + ts);
-
-        // Server redirects to index.html on success — verify login form is shown
-        waiter.waitForLoginPage();
-        Assertions.assertTrue(
-                driver.findElement(By.name("username")).isDisplayed(),
-                "After registration the login page must be shown");
+        LoginPage loginPage = new SignupPage(driver, waiter, sutUrl).open()
+                .register("Alice", "Test", "alice" + ts, "pwd" + ts);
+        Assertions.assertTrue(loginPage.isUsernameDisplayed(), "After registration the login page must be shown");
     }
 
     @AccessMode(resID = "user", concurrency = 1, sharing = false, accessMode = "READWRITE")
@@ -41,18 +33,10 @@ class TestLogin extends BaseLoggedClass {
         long ts = System.currentTimeMillis();
         String username = "bob" + ts;
         String password = "pwd" + ts;
-
-        // Register first via the signup form
-        navUtils.goToSignupPage(driver, waiter);
-        registerViaForm("Bob", "Test", username, password);
-
-        // Then login via the login form
-        loginViaForm(username, password);
-
-        // Verify we are on main.html by checking the DeathStar brand in the navbar
-        waiter.waitUntil(
-                ExpectedConditions.textToBePresentInElementLocated(
-                        By.cssSelector("a.navbar-brand"), "DeathStar"),
+        MainPage main = new SignupPage(driver, waiter, sutUrl).open()
+                .register("Bob", "Test", username, password)
+                .login(username, password);
+        Assertions.assertTrue(main.getBrandText().contains("DeathStar"),
                 "After login the main feed page with 'DeathStar' brand must be shown");
     }
 }
