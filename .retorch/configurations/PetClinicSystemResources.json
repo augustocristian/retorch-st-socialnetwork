@@ -1,0 +1,193 @@
+{
+  "web-browser": {
+    "hierarchyParent": [],
+    "replaceable": [],
+    "elasticityModel": {
+      "elasticityID": "elasModelWebBrowser",
+      "elasticity": 5,
+      "elasticityCost": 30.0
+    },
+    "resourceType": "LOGICAL",
+    "resourceID": "web-browser",
+    "minimalCapacities": [
+      {
+        "name": "memory",
+        "quantity": 0.048
+      },
+      {
+        "name": "processor",
+        "quantity": 0.25
+      },
+      {
+        "name": "storage",
+        "quantity": 0.31
+      }
+    ],
+    "dockerImage": "web-browser;eexit/mirror-http-server"
+  },
+  "frontend": {
+    "hierarchyParent": [],
+    "replaceable": [],
+    "elasticityModel": {
+      "elasticityID": "elasModelFrontend",
+      "elasticity": 4,
+      "elasticityCost": 10.0
+    },
+    "resourceType": "LOGICAL",
+    "resourceID": "frontend",
+    "minimalCapacities": [
+      {
+        "name": "memory",
+        "quantity": 0.048
+      },
+      {
+        "name": "processor",
+        "quantity": 0.25
+      },
+      {
+        "name": "storage",
+        "quantity": 0.31
+      }
+    ],
+    "dockerImage": "frontend;eexit/mirror-http-server"
+  },
+
+  "gateway": {
+    "hierarchyParent": [],
+    "replaceable": [],
+    "elasticityModel": {
+      "elasticityID": "elasModelGateway",
+      "elasticity": 4,
+      "elasticityCost": 20.0
+    },
+    "resourceType": "LOGICAL",
+    "resourceID": "gateway",
+    "minimalCapacities": [
+      {
+        "name": "memory",
+        "quantity": 0.048
+      },
+      {
+        "name": "processor",
+        "quantity": 0.25
+      },
+      {
+        "name": "storage",
+        "quantity": 0.31
+      }
+    ],
+    "dockerImage": "gateway;eexit/mirror-http-server"
+  },
+  "vet": {
+    "hierarchyParent": [
+      "petclinicdb"
+    ],
+    "replaceable": [],
+    "elasticityModel": {
+      "elasticityID": "elasModelVet",
+      "elasticity": 4,
+      "elasticityCost": 5.0
+    },
+    "resourceType": "LOGICAL",
+    "resourceID": "vet",
+    "minimalCapacities": [
+      {
+        "name": "memory",
+        "quantity": 0.048
+      },
+      {
+        "name": "processor",
+        "quantity": 0.25
+      },
+      {
+        "name": "storage",
+        "quantity": 0.31
+      }
+    ],
+    "dockerImage": "vet;eexit/mirror-http-server"
+  },
+  "owner": {
+    "hierarchyParent": [
+      "petclinicdb"
+    ],
+    "replaceable": [],
+    "elasticityModel": {
+      "elasticityID": "elasModelOwner",
+      "elasticity": 5,
+      "elasticityCost": 5.0
+    },
+    "resourceType": "LOGICAL",
+    "resourceID": "owner",
+    "minimalCapacities": [
+      {
+        "name": "memory",
+        "quantity": 0.048
+      },
+      {
+        "name": "processor",
+        "quantity": 0.25
+      },
+      {
+        "name": "storage",
+        "quantity": 0.31
+      }
+    ],
+    "dockerImage": "owner;eexit/mirror-http-server"
+  },
+  "pet": {
+    "hierarchyParent": [
+      "petclinicdb"
+    ],
+    "replaceable": [],
+    "elasticityModel": {
+      "elasticityID": "elasModelPet",
+      "elasticity": 15,
+      "elasticityCost": 5.0
+    },
+    "resourceType": "LOGICAL",
+    "resourceID": "pet",
+    "minimalCapacities": [
+      {
+        "name": "memory",
+        "quantity": 0.048
+      },
+      {
+        "name": "processor",
+        "quantity": 0.25
+      },
+      {
+        "name": "storage",
+        "quantity": 0.31
+      }
+    ],
+    "dockerImage": "pet;eexit/mirror-http-server"
+  },
+  "visit": {
+    "hierarchyParent": [
+      "petclinicdb"
+    ],
+    "replaceable": [],
+    "elasticityModel": {
+      "elasticityID": "elasModelVisit",
+      "elasticity": 25,
+      "elasticityCost": 5.0
+    },
+    "resourceType": "LOGICAL",
+    "resourceID": "visit",
+    "minimalCapacities": [
+      {
+        "name": "memory",
+        "quantity": 0.048
+      },
+      {
+        "name": "processor",
+        "quantity": 0.25
+      },
+      {
+        "name": "storage",
+        "quantity": 0.31
+      }
+    ],
+    "dockerImage": "visit;eexit/mirror-http-server"
+  }
+}

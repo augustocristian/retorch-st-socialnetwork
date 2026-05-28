@@ -1,0 +1,5 @@
+#Fetch the petclinic SUT
+
+"$SCRIPTS_FOLDER/printLog.sh" "DEBUG" "COI-set-up" "Clone the petclinic SUT"
+rm -rf "$WORKSPACE/spring-petclinic-microservices"
+git clone https://github.com/giis-uniovi/spring-petclinic-microservices
