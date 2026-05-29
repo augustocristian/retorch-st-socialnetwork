@@ -15,6 +15,7 @@ public class MainPage {
 
     private static final By NAVBAR_BRAND = By.cssSelector("a.navbar-brand");
     private static final By NAV_LINKS    = By.cssSelector(".navbar-nav .nav-link");
+    private static final By SHOW_POST    = By.id("show-post");
     private static final By POST_CONTENT = By.id("post-content");
     private static final By CREATE_POST  = By.id("create-post");
 
