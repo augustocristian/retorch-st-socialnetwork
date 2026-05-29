@@ -26,8 +26,6 @@ class TestApiTimeline extends BaseApiClass {
     private static final long HOME_TIMELINE_POLL_MS = 500;
 
     @AccessMode(resID = "user", concurrency = 1, sharing = false, accessMode = "READWRITE")
-    @AccessMode(resID = "post", concurrency = 1, sharing = false, accessMode = "READWRITE")
-    @AccessMode(resID = "social-graph", concurrency = 1, sharing = false, accessMode = "READWRITE")
     @AccessMode(resID = "home-timeline", concurrency = 10, sharing = true, accessMode = "READONLY")
     @Test
     @DisplayName("GET /wrk2-api/home-timeline/read returns a JSON array")

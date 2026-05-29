@@ -1,18 +1,11 @@
 package giis.socialnetwork.e2e.functional.pages;
 
 import giis.socialnetwork.e2e.functional.common.ElementNotFoundException;
-import giis.socialnetwork.e2e.functional.utils.Click;
 import giis.socialnetwork.e2e.functional.utils.Waiter;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
-public class SignupPage {
-
-    private final WebDriver driver;
-    private final Waiter waiter;
-    private final String sutUrl;
+public class SignupPage extends BasePage {
 
     private static final By FIRST_NAME  = By.name("first_name");
     private static final By LAST_NAME   = By.name("last_name");
@@ -22,13 +15,11 @@ public class SignupPage {
     private static final By LOGIN_LINK  = By.linkText("Login");
 
     public SignupPage(WebDriver driver, Waiter waiter, String sutUrl) {
-        this.driver = driver;
-        this.waiter = waiter;
-        this.sutUrl = sutUrl;
+        super(driver, waiter, sutUrl);
     }
 
     public SignupPage open() {
-        driver.get(sutUrl + "/signup.html");
+        navigate("/signup.html");
         waiter.waitForSignupPage();
         return this;
     }
@@ -40,21 +31,14 @@ public class SignupPage {
         fill(LAST_NAME, lastName);
         fill(USERNAME, username);
         fill(PASSWORD, password);
-        waiter.waitUntil(ExpectedConditions.elementToBeClickable(SIGNUP_BTN), "Signup button not clickable");
-        Click.element(driver, driver.findElement(SIGNUP_BTN));
+        click(SIGNUP_BTN);
         waiter.waitForLoginPage();
         return new LoginPage(driver, waiter, sutUrl);
     }
 
-    public boolean isFirstNameDisplayed()  { return driver.findElement(FIRST_NAME).isDisplayed(); }
-    public boolean isLastNameDisplayed()   { return driver.findElement(LAST_NAME).isDisplayed(); }
-    public boolean isUsernameDisplayed()   { return driver.findElement(USERNAME).isDisplayed(); }
-    public boolean isPasswordDisplayed()   { return driver.findElement(PASSWORD).isDisplayed(); }
-    public boolean isLoginLinkDisplayed()  { return driver.findElement(LOGIN_LINK).isDisplayed(); }
-
-    private void fill(By locator, String value) {
-        WebElement f = driver.findElement(locator);
-        f.clear();
-        f.sendKeys(value);
-    }
+    public boolean isFirstNameDisplayed()  { return isDisplayed(FIRST_NAME); }
+    public boolean isLastNameDisplayed()   { return isDisplayed(LAST_NAME); }
+    public boolean isUsernameDisplayed()   { return isDisplayed(USERNAME); }
+    public boolean isPasswordDisplayed()   { return isDisplayed(PASSWORD); }
+    public boolean isLoginLinkDisplayed()  { return isDisplayed(LOGIN_LINK); }
 }

@@ -188,6 +188,13 @@ public class BaseApiClass {
         );
     }
 
+    protected static List<NameValuePair> unfollowPayload(String userName, String followeeName) {
+        return Arrays.asList(
+                new BasicNameValuePair("user_name", userName),
+                new BasicNameValuePair("followee_name", followeeName)
+        );
+    }
+
     // ── Fixture helpers ───────────────────────────────────────────────────────
 
     /**
@@ -265,6 +272,48 @@ public class BaseApiClass {
         int status = postFormStatus(userUrl("/follow"), followPayload(userName, followeeName));
         log.debug("'{}' follows '{}': HTTP {}", userName, followeeName, status);
         return status;
+    }
+
+    /**
+     * Unfollows {@code followeeName} as {@code userName} via
+     * {@code POST /api/user/unfollow}. No authentication required.
+     * Returns HTTP 200 on success.
+     */
+    protected int unfollowUser(String userName, String followeeName) throws IOException {
+        int status = postFormStatus(userUrl("/unfollow"), unfollowPayload(userName, followeeName));
+        log.debug("'{}' unfollows '{}': HTTP {}", userName, followeeName, status);
+        return status;
+    }
+
+    /**
+     * Reads the follower id list of the currently logged-in user via
+     * {@code GET /api/user/get_follower} (requires a valid {@code login_token} cookie).
+     */
+    protected JsonArray getFollowers() throws IOException {
+        return getJsonArray(userUrl("/get_follower"));
+    }
+
+    /**
+     * Reads the followee id list of the currently logged-in user via
+     * {@code GET /api/user/get_followee} (requires a valid {@code login_token} cookie).
+     */
+    protected JsonArray getFollowees() throws IOException {
+        return getJsonArray(userUrl("/get_followee"));
+    }
+
+    /**
+     * Attempts a login and reports whether the server issued a {@code login_token}
+     * cookie, without throwing when it did not. Used to assert authentication failures.
+     */
+    protected boolean loginSetsToken(String username, String password) throws IOException {
+        cookieStore.clear();
+        postForm(userUrl("/login"), loginPayload(username, password));
+        for (Cookie cookie : cookieStore.getCookies()) {
+            if ("login_token".equals(cookie.getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

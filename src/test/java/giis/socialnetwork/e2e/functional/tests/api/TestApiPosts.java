@@ -14,7 +14,7 @@ import java.io.IOException;
  * Validates post composition and user-timeline retrieval:
  * <ul>
  *   <li>POST /wrk2-api/post/compose            — create a post (HTTP 200)</li>
- *   <li>GET  /wrk2-api/user-timeline/read      — read back the composed post</li>
+ *   <li>GET  /wrk2-api/user-timeline/read      — read back the composed post, incl. @mention extraction</li>
  * </ul>
  */
 class TestApiPosts extends BaseApiClass {
@@ -69,6 +69,27 @@ class TestApiPosts extends BaseApiClass {
 
     @AccessMode(resID = "user", concurrency = 1, sharing = false, accessMode = "READWRITE")
     @AccessMode(resID = "post", concurrency = 1, sharing = false, accessMode = "READWRITE")
+    @AccessMode(resID = "user-timeline", concurrency = 10, sharing = true, accessMode = "READONLY")
+    @Test
+    @DisplayName("A post mentioning an existing user records that user in the post's user_mentions")
+    void testComposePostWithMentionPopulatesUserMentions() throws IOException {
+        String[] author = createUserWithName("mentionauthor");
+        String authorName = author[0];
+        long authorId = Long.parseLong(author[1]);
+        String[] mentioned = createUserWithName("mentioned");
+        String mentionedName = mentioned[0];
+
+        composePost(authorName, authorId, "hi @" + mentionedName + " " + unique());
+
+        String url = wrk2UserTimelineUrl("/read") + "?user_id=" + authorId + "&start=0&stop=10";
+        JsonArray timeline = getJsonArray(url);
+        Assertions.assertFalse(timeline.isEmpty(), "Author timeline must contain the composed post");
+
+        JsonArray mentions = timeline.get(0).getAsJsonObject().getAsJsonArray("user_mentions");
+        Assertions.assertTrue(containsByField(mentions, "username", mentionedName),
+                "Mentioned user '" + mentionedName + "' must appear in the post's user_mentions");
+    }
+
     @AccessMode(resID = "user-timeline", concurrency = 10, sharing = true, accessMode = "READONLY")
     @Test
     @DisplayName("GET /wrk2-api/user-timeline/read with missing args returns HTTP 400")
