@@ -51,45 +51,16 @@
     ],
     "dockerImage": "frontend;eexit/mirror-http-server"
   },
-
-  "gateway": {
+  "user": {
     "hierarchyParent": [],
     "replaceable": [],
     "elasticityModel": {
-      "elasticityID": "elasModelGateway",
-      "elasticity": 4,
-      "elasticityCost": 20.0
-    },
-    "resourceType": "LOGICAL",
-    "resourceID": "gateway",
-    "minimalCapacities": [
-      {
-        "name": "memory",
-        "quantity": 0.048
-      },
-      {
-        "name": "processor",
-        "quantity": 0.25
-      },
-      {
-        "name": "storage",
-        "quantity": 0.31
-      }
-    ],
-    "dockerImage": "gateway;eexit/mirror-http-server"
-  },
-  "vet": {
-    "hierarchyParent": [
-      "petclinicdb"
-    ],
-    "replaceable": [],
-    "elasticityModel": {
-      "elasticityID": "elasModelVet",
+      "elasticityID": "elasModelUser",
       "elasticity": 4,
       "elasticityCost": 5.0
     },
     "resourceType": "LOGICAL",
-    "resourceID": "vet",
+    "resourceID": "user",
     "minimalCapacities": [
       {
         "name": "memory",
@@ -104,20 +75,44 @@
         "quantity": 0.31
       }
     ],
-    "dockerImage": "vet;eexit/mirror-http-server"
+    "dockerImage": "user;eexit/mirror-http-server"
   },
-  "owner": {
-    "hierarchyParent": [
-      "petclinicdb"
-    ],
+  "post": {
+    "hierarchyParent": [],
     "replaceable": [],
     "elasticityModel": {
-      "elasticityID": "elasModelOwner",
+      "elasticityID": "elasModelPost",
+      "elasticity": 10,
+      "elasticityCost": 5.0
+    },
+    "resourceType": "LOGICAL",
+    "resourceID": "post",
+    "minimalCapacities": [
+      {
+        "name": "memory",
+        "quantity": 0.048
+      },
+      {
+        "name": "processor",
+        "quantity": 0.25
+      },
+      {
+        "name": "storage",
+        "quantity": 0.31
+      }
+    ],
+    "dockerImage": "post;eexit/mirror-http-server"
+  },
+  "social-graph": {
+    "hierarchyParent": [],
+    "replaceable": [],
+    "elasticityModel": {
+      "elasticityID": "elasModelSocialGraph",
       "elasticity": 5,
       "elasticityCost": 5.0
     },
     "resourceType": "LOGICAL",
-    "resourceID": "owner",
+    "resourceID": "social-graph",
     "minimalCapacities": [
       {
         "name": "memory",
@@ -132,20 +127,18 @@
         "quantity": 0.31
       }
     ],
-    "dockerImage": "owner;eexit/mirror-http-server"
+    "dockerImage": "social-graph;eexit/mirror-http-server"
   },
-  "pet": {
-    "hierarchyParent": [
-      "petclinicdb"
-    ],
+  "home-timeline": {
+    "hierarchyParent": [],
     "replaceable": [],
     "elasticityModel": {
-      "elasticityID": "elasModelPet",
-      "elasticity": 15,
+      "elasticityID": "elasModelHomeTimeline",
+      "elasticity": 10,
       "elasticityCost": 5.0
     },
     "resourceType": "LOGICAL",
-    "resourceID": "pet",
+    "resourceID": "home-timeline",
     "minimalCapacities": [
       {
         "name": "memory",
@@ -160,20 +153,18 @@
         "quantity": 0.31
       }
     ],
-    "dockerImage": "pet;eexit/mirror-http-server"
+    "dockerImage": "home-timeline;eexit/mirror-http-server"
   },
-  "visit": {
-    "hierarchyParent": [
-      "petclinicdb"
-    ],
+  "user-timeline": {
+    "hierarchyParent": [],
     "replaceable": [],
     "elasticityModel": {
-      "elasticityID": "elasModelVisit",
-      "elasticity": 25,
+      "elasticityID": "elasModelUserTimeline",
+      "elasticity": 10,
       "elasticityCost": 5.0
     },
     "resourceType": "LOGICAL",
-    "resourceID": "visit",
+    "resourceID": "user-timeline",
     "minimalCapacities": [
       {
         "name": "memory",
@@ -188,6 +179,6 @@
         "quantity": 0.31
       }
     ],
-    "dockerImage": "visit;eexit/mirror-http-server"
+    "dockerImage": "user-timeline;eexit/mirror-http-server"
   }
 }

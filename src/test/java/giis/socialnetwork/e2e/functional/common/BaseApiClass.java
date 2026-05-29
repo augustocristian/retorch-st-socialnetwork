@@ -8,6 +8,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -15,6 +16,7 @@ import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.AfterAll;
@@ -57,7 +59,10 @@ public class BaseApiClass {
         sutUrl = envUrl != null ? envUrl : properties.getProperty("LOCALHOST_URL");
         log.info("API base URL: {}", sutUrl);
         cookieStore = new BasicCookieStore();
-        httpClient = HttpClients.custom().setDefaultCookieStore(cookieStore).build();
+        httpClient = HttpClients.custom()
+                .setDefaultCookieStore(cookieStore)
+                .setRedirectStrategy(new LaxRedirectStrategy())
+                .build();
     }
 
     @AfterAll
@@ -111,9 +116,12 @@ public class BaseApiClass {
     }
 
     private int statusOf(HttpUriRequest request) throws IOException {
-        int status = httpClient.execute(request).getStatusLine().getStatusCode();
-        log.debug("{} {} -> {}", request.getMethod(), request.getURI(), status);
-        return status;
+        try (CloseableHttpResponse response = httpClient.execute(request)) {
+            EntityUtils.consume(response.getEntity());
+            int status = response.getStatusLine().getStatusCode();
+            log.debug("{} {} -> {}", request.getMethod(), request.getURI(), status);
+            return status;
+        }
     }
 
     protected JsonObject getJsonObject(String url) throws IOException {
@@ -121,7 +129,8 @@ public class BaseApiClass {
     }
 
     protected JsonArray getJsonArray(String url) throws IOException {
-        return JsonParser.parseString(get(url)).getAsJsonArray();
+        JsonElement element = JsonParser.parseString(get(url));
+        return element.isJsonArray() ? element.getAsJsonArray() : new JsonArray();
     }
 
     /**
@@ -265,7 +274,7 @@ public class BaseApiClass {
     private static long parseUserIdFromJwt(String jwt) {
         String payload = jwt.split("\\.")[1];
         int padding = (4 - payload.length() % 4) % 4;
-        for (int i = 0; i < padding; i++) payload += "=";
+        payload = payload + "===".substring(0, padding);
         String json = new String(Base64.getUrlDecoder().decode(payload), StandardCharsets.UTF_8);
         return JsonParser.parseString(json).getAsJsonObject().get("user_id").getAsLong();
     }
