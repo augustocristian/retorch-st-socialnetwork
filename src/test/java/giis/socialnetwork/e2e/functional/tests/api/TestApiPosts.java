@@ -21,12 +21,17 @@ class TestApiPosts extends BaseApiClass {
 
     @AccessMode(resID = "user", concurrency = 1, sharing = false, accessMode = "READWRITE")
     @AccessMode(resID = "post", concurrency = 1, sharing = false, accessMode = "READWRITE")
+    @AccessMode(resID = "social-graph", concurrency = 1, sharing = false, accessMode = "READWRITE")
     @Test
     @DisplayName("POST /wrk2-api/post/compose returns HTTP 200 for a registered user")
     void testComposePost() throws IOException {
-        String[] user = createUserWithName("compose");
-        String username = user[0];
-        long userId = Long.parseLong(user[1]);
+        String[] author = createUserWithName("compose");
+        String username = author[0];
+        long userId = Long.parseLong(author[1]);
+
+        // social-graph-service rejects ZADD with an empty member set; author must have ≥1 follower.
+        String[] follower = createUserWithName("composefollower");
+        followUser(follower[0], username);
 
         int status = composePost(username, userId, "Hello from API test " + unique());
         Assertions.assertEquals(200, status, "Compose post must return HTTP 200");

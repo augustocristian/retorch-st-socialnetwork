@@ -1,5 +1,5 @@
-#Fetch the petclinic SUT
+#Fetch the Social Network SUT
 
-"$SCRIPTS_FOLDER/printLog.sh" "DEBUG" "COI-set-up" "Clone the petclinic SUT"
-rm -rf "$WORKSPACE/spring-petclinic-microservices"
-git clone https://github.com/giis-uniovi/spring-petclinic-microservices
+"$SCRIPTS_FOLDER/printLog.sh" "DEBUG" "COI-set-up" "Clone the Social Network SUT"
+rm -rf "$WORKSPACE/docker-socialnetwork"
+git clone https://github.com/augustocristian/docker-socialnetwork
