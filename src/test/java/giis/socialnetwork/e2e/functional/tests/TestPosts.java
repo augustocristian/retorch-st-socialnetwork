@@ -39,8 +39,9 @@ class TestPosts extends BaseLoggedClass {
         MainPage main = new SignupPage(driver, waiter, sutUrl).open()
                 .register("Timeline", "Ui", username, "pwd" + ts)
                 .login(username, "pwd" + ts);
-        main.composePost(postText).open().waitForPost(postText);
+        // profile.html shows the user's own user-timeline; main.html shows home-timeline (followed users only)
+        main.composePost(postText).openProfile().waitForPost(postText);
         Assertions.assertTrue(main.hasPostText(postText),
-                "Composed post must appear in the timeline after creation");
+                "Composed post must appear in the user's profile timeline after creation");
     }
 }

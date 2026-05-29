@@ -2,14 +2,9 @@
 
 # RETORCH Social Network End-to-End Test Suite
 
-This repository contains an End-to-End Test suite for the
-[DeathStarBench Social Network](https://github.com/augustocristian/docker-socialnetwork) microservices application,
-used as a demonstrator of the [RETORCH Framework](https://github.com/giis-uniovi/retorch).
+End-to-End test suite for the [DeathStarBench Social Network](https://github.com/augustocristian/docker-socialnetwork) microservices application, used as a demonstrator of the [RETORCH Framework](https://github.com/giis-uniovi/retorch).
 
-The Social Network is a benchmark application based on
-[DeathStarBench](https://github.com/delimitrou/DeathStarBench) built as a distributed microservices
-architecture using Thrift RPC, Nginx/OpenResty, MongoDB, Redis, Memcached and RabbitMQ,
-all running in Docker containers.
+The Social Network is a distributed benchmark application based on [DeathStarBench](https://github.com/delimitrou/DeathStarBench), built with Thrift RPC, Nginx/OpenResty, MongoDB, Redis, Memcached and RabbitMQ — all running in Docker containers.
 
 ## Test suites
 
@@ -18,18 +13,17 @@ all running in Docker containers.
 | **API** | `BaseApiClass` | REST endpoints via Apache HttpClient (form POST + JSON response) |
 | **Browser (E2E)** | `BaseLoggedClass` | Web UI via Selenium WebDriver (Chrome) |
 
-## Deployment instructions
-
-### Prerequisites
+## Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows / macOS) or Docker Engine (Linux)
 - Git
+- Java 8+, Maven 3.x
 
-The SUT is cloned automatically by the deploy scripts from
-`https://github.com/augustocristian/docker-socialnetwork` if the `docker-socialnetwork/` directory
-is not already present.
+## Deployment
 
-### Local deployment — Windows
+The deploy scripts clone the SUT automatically from `https://github.com/augustocristian/docker-socialnetwork` into `docker-socialnetwork/` if not already present, create the `jenkins_network` Docker network, start all containers, and wait up to 300 seconds for the Nginx gateway to be ready.
+
+### Windows (PowerShell)
 
 ```powershell
 # Start the SUT on the default port (8080)
@@ -42,7 +36,7 @@ is not already present.
 .\deploy-local.ps1 -Down
 ```
 
-### Local deployment — Linux / macOS
+### Linux / macOS
 
 ```bash
 # Make the script executable (first time only)
@@ -58,26 +52,30 @@ chmod +x deploy-local.sh
 ./deploy-local.sh --down
 ```
 
-Both scripts handle all setup steps automatically: clone the SUT repository if needed,
-create the `jenkins_network` Docker network, start the containers, and wait up to 300 seconds
-for the Nginx gateway to serve the Social Network UI.
+Once up, the SUT is accessible at `http://localhost:8080` (default).
 
-Once the SUT is up it is accessible at `http://localhost:<port>` (default `http://localhost:8080`).
+## Running the tests
 
-### Running the tests
+The SUT must be running before executing the tests.
 
 ```bash
-# Run all tests
+# Run the full suite
 mvn test
 
-# Run a specific test class
+# Run a specific API test class
 mvn test -Dtest=TestApiUsers
+mvn test -Dtest=TestApiPosts
+mvn test -Dtest=TestApiSocialGraph
+mvn test -Dtest=TestApiTimeline
+
+# Run a specific browser test class
+mvn test -Dtest=TestLogin
 mvn test -Dtest=TestNavigation
+mvn test -Dtest=TestPosts
 ```
 
-### CI deployment — Jenkins
+## CI deployment — Jenkins
 
 The `Jenkinsfile` at the repository root defines the full pipeline used by the on-premises Jenkins instance.
-It relies on the lifecycle scripts located in `.retorch/scripts/` and the environment files in
-`.retorch/envfiles/`. The GitHub Actions workflow (`.github/workflows/test.yml`) compiles the project;
-the actual test execution is delegated to Jenkins.
+It relies on the lifecycle scripts in `.retorch/scripts/` and the environment files in `.retorch/envfiles/`.
+The GitHub Actions workflow (`.github/workflows/test.yml`) compiles the project; actual test execution is delegated to Jenkins via RETORCH orchestration.

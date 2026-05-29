@@ -5,7 +5,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
-import java.util.List;
 
 public class MainPage {
 
@@ -32,6 +31,7 @@ public class MainPage {
     }
 
     public MainPage composePost(String text) {
+        driver.findElement(SHOW_POST).click();
         waiter.waitUntil(ExpectedConditions.visibilityOfElementLocated(POST_CONTENT), "Post textarea not visible");
         driver.findElement(POST_CONTENT).sendKeys(text);
         driver.findElement(CREATE_POST).click();
@@ -40,6 +40,12 @@ public class MainPage {
 
     public void waitForPost(String text) {
         waiter.waitForPostText(text, driver);
+    }
+
+    public MainPage openProfile() {
+        driver.get(sutUrl + "/profile.html");
+        waiter.waitForMainPage();
+        return this;
     }
 
     public ContactPage goToContacts() {
@@ -53,6 +59,8 @@ public class MainPage {
     }
 
     public boolean isComposeFormVisible() {
+        driver.findElement(SHOW_POST).click();
+        waiter.waitUntil(ExpectedConditions.visibilityOfElementLocated(POST_CONTENT), "Post textarea not visible");
         return driver.findElement(POST_CONTENT).isDisplayed()
                 && driver.findElement(CREATE_POST).isDisplayed();
     }

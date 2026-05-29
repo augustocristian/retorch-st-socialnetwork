@@ -1,6 +1,6 @@
 # CLAUDE.md — retorch-st-socialnetwork
 
-This file provides Claude Code with the context needed to work in this repository without re-deriving it each session.
+This file gives Claude Code the context needed to work in this repository without re-deriving it each session.
 
 ## Project purpose
 
@@ -31,19 +31,30 @@ The scripts clone the SUT if needed, create the `jenkins_network` Docker network
 
 ### Microservices and Nginx routes
 
-| Route prefix | Target service | Method | Notes |
-|---|---|---|---|
-| `/api/user/register` | user-service | POST (form) | Registers user, redirects to index.html |
-| `/api/user/login` | user-service | POST (form) | Sets `login_token` JWT cookie, redirects to main.html |
-| `/api/user/follow` | social-graph-service | POST (form) | Follow by `user_name`/`followee_name` or by ID |
-| `/api/user/unfollow` | social-graph-service | POST (form) | Unfollow by username or ID |
-| `/api/user/get_follower` | social-graph-service | GET | Requires `login_token` cookie; returns follower IDs |
-| `/api/user/get_followee` | social-graph-service | GET | Requires `login_token` cookie; returns followee IDs |
-| `/wrk2-api/post/compose` | compose-post-service | POST (form) | No auth; params: username, user_id, text, media_ids, media_types, post_type |
-| `/wrk2-api/user-timeline/read` | user-timeline-service | GET | No auth; params: user_id, start, stop |
-| `/wrk2-api/home-timeline/read` | home-timeline-service | GET | No auth; params: user_id, start, stop |
+| Route prefix | Auth | Notes |
+|---|---|---|
+| `/api/user/register` | none | POST (form); redirects to index.html |
+| `/api/user/login` | none | POST (form); sets `login_token` JWT cookie; redirects to main.html |
+| `/api/user/follow` | none | POST (form); JWT check commented out in Lua |
+| `/api/user/get_follower` | JWT cookie | GET; returns follower IDs |
+| `/api/post/compose` | JWT cookie | POST (form); authenticated compose used by the browser UI |
+| `/api/home-timeline/read` | JWT cookie | GET; browser UI version — reads user_id from JWT |
+| `/api/user-timeline/read` | JWT cookie | GET; browser UI version — reads user_id from JWT |
+| `/wrk2-api/post/compose` | none | POST (form); unauthenticated — used by API tests |
+| `/wrk2-api/user-timeline/read` | none | GET; params: user_id, start, stop |
+| `/wrk2-api/home-timeline/read` | none | GET; params: user_id, start, stop |
 
 The home timeline is populated **asynchronously** via RabbitMQ → `write-home-timeline-service`. After `POST /wrk2-api/post/compose`, the post may not appear in the home timeline immediately.
+
+### Known SUT limitation — ZADD with empty follower set
+
+`social-graph-service::GetFollowers` does a Redis `ZADD` to cache the result after a MongoDB lookup. When the author has **no followers**, the member set is empty and Redis rejects the `ZADD` command, causing the entire compose-post Thrift call to return 500. The post IS still written to `post-storage` and `user-timeline` before the failure occurs.
+
+**Workaround in tests:** every compose test ensures the author has at least one follower before composing (so the `ZADD` is non-empty). See `testComposePost` in `TestApiPosts` and `testComposePostAppearsInTimeline` in `TestPosts`.
+
+### Missing services added to docker-socialnetwork/docker-compose.yml
+
+The upstream `docker-compose.yml` lacked `compose-post-redis`, `write-home-timeline-rabbitmq`, and `write-home-timeline-service`. `compose-post-redis` and `write-home-timeline-rabbitmq` have been added and are running. Note: the `WriteHomeTimelineService` binary does not exist in the pre-built `deathstarbench/social-network-microservices:latest` image, so that service cannot be started.
 
 ---
 
@@ -52,13 +63,18 @@ The home timeline is populated **asynchronously** via RabbitMQ → `write-home-t
 ```
 src/test/java/giis/socialnetwork/e2e/functional/
 ├── common/
-│   ├── BaseApiClass.java        # HTTP base class (form POST, cookie store, JWT parsing)
+│   ├── BaseApiClass.java        # HTTP base class (form POST, cookie store, JWT parsing, LaxRedirectStrategy)
 │   ├── BaseLoggedClass.java     # Selenium base class (browser lifecycle, shared helpers)
 │   └── ElementNotFoundException.java
+├── pages/
+│   ├── LoginPage.java           # index.html — login form
+│   ├── SignupPage.java          # signup.html — registration form
+│   ├── MainPage.java            # main.html — home timeline + compose (hidden by default, toggled by #show-post)
+│   └── ContactPage.java        # contact.html — follow/unfollow, follower/followee lists
 ├── tests/
 │   ├── TestNavigation.java      # Browser: page structure and navbar links
 │   ├── TestLogin.java           # Browser: register + login flows via forms
-│   ├── TestPosts.java           # Browser: compose post and verify in timeline
+│   ├── TestPosts.java           # Browser: compose post, verify in user-timeline (profile.html)
 │   └── api/
 │       ├── TestApiUsers.java    # API: register + login, JWT extraction
 │       ├── TestApiPosts.java    # API: compose post, read user timeline
@@ -79,7 +95,7 @@ src/test/java/giis/socialnetwork/e2e/functional/
 | JUnit 5 (Jupiter) | Test runner |
 | Selenium WebDriver 4.x | Browser automation (frontend tests) |
 | Selema | Browser lifecycle manager (wraps SeleManager) |
-| Apache HttpClient 4.5.14 | HTTP client (API tests — form-encoded POST, cookie store) |
+| Apache HttpClient 4.5.14 | HTTP client (API tests — form-encoded POST, cookie store, LaxRedirectStrategy) |
 | Gson 2.14.0 | JSON parsing (API tests, JWT decoding) |
 | RETORCH annotations | `@AccessMode` resource declarations for scheduling |
 | Log4j2 + SLF4J | Structured logging with per-TJob log files |
@@ -88,7 +104,7 @@ src/test/java/giis/socialnetwork/e2e/functional/
 
 ## RETORCH resource model
 
-Each test declares the resources it accesses with `@AccessMode`. RETORCH uses these to generate a parallel-safe Jenkinsfile (via `RetorchGenerateJenkinfileTest`).
+Each test declares the resources it accesses with `@AccessMode`. RETORCH uses these to generate a parallel-safe Jenkinsfile.
 
 | Resource ID | Represents | Typical access |
 |---|---|---|
@@ -100,7 +116,7 @@ Each test declares the resources it accesses with `@AccessMode`. RETORCH uses th
 | `home-timeline` | Home feed data in home-timeline-redis | `READONLY, concurrency=10, sharing=true` |
 | `user-timeline` | User timeline data in user-timeline-mongodb | `READONLY, concurrency=10, sharing=true` |
 
-**API tests do not use `web-browser` or `frontend`** — they interact directly with the HTTP layer and can therefore run with higher concurrency for read-only operations.
+**API tests do not use `web-browser` or `frontend`** — they interact directly with the HTTP layer.
 
 ---
 
@@ -120,7 +136,7 @@ Log files are written to `target/testlogs/log${sys:TJOB_NAME:-testinglocal}-test
 ```xml
 <directory>${project.basedir}/target/${TJOB_NAME}</directory>
 ```
-Each Maven invocation writes compiled classes and surefire reports under `target/{TJOB_NAME}/`, preventing parallel CI builds from corrupting each other's compiled output. A Maven profile (`local-execution`) defaults `TJOB_NAME=local` when the property is absent.
+Each Maven invocation writes compiled classes and surefire reports under `target/{TJOB_NAME}/`, preventing parallel CI builds from corrupting each other. A Maven profile (`local-execution`) defaults `TJOB_NAME=local` when the property is absent.
 
 ---
 
@@ -154,27 +170,56 @@ mvn test -Dtest="<TestClass#method>" -DTJOB_NAME="<TJOB_NAME>" -DSUT_URL="<SUT_U
 
 ---
 
-## Known issues and design decisions
+## Authentication model
 
-### Authentication model
-The social network uses JWT-based session cookies (`login_token`). The `POST /api/user/login` endpoint sets this cookie via `Set-Cookie` and redirects the browser to `main.html`. API tests use Apache HttpClient with a `BasicCookieStore` — the cookie is automatically sent on subsequent requests to the same host. The JWT payload (base64url-decoded middle segment) contains `user_id` and `username`. `BaseApiClass.loginUser()` extracts `user_id` from the JWT payload without signature verification (the secret is known to be `"secret"`).
+The social network uses JWT-based session cookies (`login_token`). The `POST /api/user/login` endpoint sets this cookie via `Set-Cookie` and redirects the browser to `main.html`.
 
-### Form-encoded requests (not JSON)
+**API tests** use Apache HttpClient with `BasicCookieStore` and `LaxRedirectStrategy` (so POST redirects are followed and the final 200 response is captured). The JWT payload (base64url-decoded middle segment) contains `user_id` and `username`. `BaseApiClass.loginUser()` extracts `user_id` from the JWT payload without signature verification (the secret is `"secret"`).
+
+**User IDs are large 64-bit snowflake integers** (e.g., `1167518873994911744`). Java `long` handles them exactly, but Lua's `tonumber()` (which uses IEEE-754 double precision) may round them. The `/api/*` browser-side endpoints use the rounded Lua value consistently for both reads and writes, so they remain self-consistent.
+
+---
+
+## Form-encoded requests (not JSON)
+
 All Social Network API endpoints accept `application/x-www-form-urlencoded` POST bodies, not JSON. `BaseApiClass` uses `UrlEncodedFormEntity` and `BasicNameValuePair` from Apache HttpClient for all mutations. Read operations use plain `HttpGet`.
 
-### Home timeline eventual consistency
-After `POST /wrk2-api/post/compose`, the home-timeline-service is updated **asynchronously** via RabbitMQ and `write-home-timeline-service`. `TestApiTimeline.testHomeTimelineShowsFollowedUserPost` polls `GET /wrk2-api/home-timeline/read` (up to `HOME_TIMELINE_TIMEOUT_MS = 15 000 ms`, every `HOME_TIMELINE_POLL_MS = 500 ms`) using `LockSupport.parkNanos` — never `Thread.sleep`, which triggers Sonar rule `java:S2925`. The browser test `TestPosts.testComposePostAppearsInTimeline` uses a refresh-retry loop via `Waiter.waitForPostText`.
+---
 
-### Follow endpoint — no auth required
-The `POST /api/user/follow` Lua script has its JWT auth check commented out. Tests can therefore follow users by `user_name`/`followee_name` without being logged in. `GET /api/user/get_follower` does require a valid JWT cookie (it reads the requesting user's `user_id` from the token, not from a query parameter).
+## Home timeline eventual consistency
 
-### User uniqueness
+After `POST /wrk2-api/post/compose`, the home-timeline-service is updated **asynchronously** via RabbitMQ and `write-home-timeline-service`. `TestApiTimeline.testHomeTimelineShowsFollowedUserPost` polls `GET /wrk2-api/home-timeline/read` (up to `HOME_TIMELINE_TIMEOUT_MS = 15 000 ms`, every `HOME_TIMELINE_POLL_MS = 500 ms`) using `LockSupport.parkNanos` — never `Thread.sleep`, which triggers Sonar rule `java:S2925`.
+
+The browser test `TestPosts.testComposePostAppearsInTimeline` navigates to `profile.html` (user-timeline) after composing, not back to `main.html` (home-timeline). The home-timeline only shows posts from followed users; the author's own composed post only appears in their user-timeline.
+
+---
+
+## Empty home-timeline response
+
+`GET /wrk2-api/home-timeline/read` returns `{}` (empty JSON object, not `[]`) when the user has no posts in their home timeline. `BaseApiClass.getJsonArray()` handles this by returning an empty `JsonArray` when the response is not a JSON array.
+
+---
+
+## UI — compose form is hidden by default
+
+The compose section on `main.html` has `display: none` in `main.css` and is toggled by clicking the `#show-post` nav link. `MainPage.composePost()` and `MainPage.isComposeFormVisible()` both click `#show-post` first before interacting with the form.
+
+---
+
+## UI — contact page follower list
+
+The `#follower-list` and `#followee-list` container divs on `contact.html` have zero height when empty (their `.post-card` children are `display: none`). `ContactPage.isFollowerListDisplayed()` and `isFolloweeListDisplayed()` check for DOM presence (`!findElements().isEmpty()`) rather than WebDriver visibility, which would return false for zero-height elements. `Waiter.waitForContactPage()` waits for `#followee-name` (the follow form input, always visible) instead of `#follower-list`.
+
+---
+
+## User uniqueness
+
 Each test creates users with a timestamp-based username suffix (e.g., `reg1748430000000`) to avoid conflicts across repeated or parallel runs. Usernames are lower-cased and stripped of non-alphanumeric characters to satisfy the social network's constraints.
 
-### Missing services added to docker-compose
-The upstream `docker-compose.yml` lacked `compose-post-redis`, `write-home-timeline-rabbitmq`, and `write-home-timeline-service`. These have been added so that `POST /wrk2-api/post/compose` correctly propagates posts to the home timeline.
+---
 
-### Parallel build isolation
+## Parallel build isolation
+
 Multiple TJobs run concurrently in CI, each calling `mvn test` in the same workspace. The `<directory>` override in `pom.xml` plus per-TJob log files prevent classpath and log file collisions.
 
 ---
@@ -185,7 +230,7 @@ Multiple TJobs run concurrently in CI, each calling `mvn test` in the same works
 - `get(url)` — GET, returns response body as `String`
 - `getStatus(url)` — GET, returns HTTP status code
 - `postForm(url, params)` — form-encoded POST, returns response body
-- `postFormStatus(url, params)` — form-encoded POST, returns HTTP status code
+- `postFormStatus(url, params)` — form-encoded POST, returns HTTP status code (follows POST redirects)
 
 ### URL builders
 - `userUrl(path)` → `sutUrl + "/api/user" + path`
@@ -206,26 +251,6 @@ Multiple TJobs run concurrently in CI, each calling `mvn test` in the same works
 - `createUserWithName(label)` — same but returns `String[]{username, userId, password}`
 - `composePost(username, userId, text)` — returns HTTP status
 - `followUser(userName, followeeName)` — returns HTTP status
-
-### Typical test shape (write + verify)
-```java
-@AccessMode(resID = "user", concurrency = 1, sharing = false, accessMode = "READWRITE")
-@AccessMode(resID = "post", concurrency = 1, sharing = false, accessMode = "READWRITE")
-@AccessMode(resID = "user-timeline", concurrency = 10, sharing = true, accessMode = "READONLY")
-@Test
-@DisplayName("GET /wrk2-api/user-timeline/read returns a JSON array containing the composed post")
-void testReadUserTimeline() throws IOException {
-    String[] user = createUserWithName("timeline");
-    String username = user[0];
-    long userId = Long.parseLong(user[1]);
-    String postText = "Timeline test post " + unique();
-    composePost(username, userId, postText);
-
-    JsonArray timeline = getJsonArray(wrk2UserTimelineUrl("/read")
-            + "?user_id=" + userId + "&start=0&stop=10");
-    Assertions.assertFalse(timeline.isEmpty(), "Timeline must contain the post");
-}
-```
 
 ---
 

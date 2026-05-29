@@ -63,10 +63,10 @@ public class Waiter {
                 "Main page did not load");
     }
 
-    /** Contact page — follower-list section. */
+    /** Contact page — follow form input (always visible). */
     public void waitForContactPage() {
         log.debug("Waiting for contact page to load");
-        navWaitUntil(ExpectedConditions.visibilityOfElementLocated(By.id("follower-list")),
+        navWaitUntil(ExpectedConditions.visibilityOfElementLocated(By.id("followee-name")),
                 "Contact page did not load");
     }
 

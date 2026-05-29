@@ -25,6 +25,6 @@ public class ContactPage {
         return this;
     }
 
-    public boolean isFollowerListDisplayed() { return driver.findElement(FOLLOWER_LIST).isDisplayed(); }
-    public boolean isFolloweeListDisplayed() { return driver.findElement(FOLLOWEE_LIST).isDisplayed(); }
+    public boolean isFollowerListDisplayed() { return !driver.findElements(FOLLOWER_LIST).isEmpty(); }
+    public boolean isFolloweeListDisplayed() { return !driver.findElements(FOLLOWEE_LIST).isEmpty(); }
 }
