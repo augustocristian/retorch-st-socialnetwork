@@ -37,7 +37,7 @@ spec:
     spec:
       containers:
       - name: post-storage-mongodb
-        image: mongo:4.4.6
+        image: mongo:8.2.11
         volumeMounts:
           - name: my-data
             mountPath: "/data/db"
