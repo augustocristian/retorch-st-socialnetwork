@@ -25,20 +25,6 @@ updates:
     open-pull-requests-limit: 20
 
 # SUT UPDATES
-  # Tracks base images referenced by the root docker-compose.yml (used by the
-  # local/CI deployment to run the social-network microservices).
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: weekly
-      day: "friday"
-      time: "00:40"
-      timezone: "Europe/Madrid"
-    assignees:
-      - "ClaudiodelaRiva"
-    rebase-strategy: "disabled"
-    open-pull-requests-limit: 20
-
   # Tracks base images in the vendored DeathStarBench Social Network SUT
   # (sut/Dockerfile*, sut/docker/**/Dockerfile*, sut/docker-compose*.yml).
   - package-ecosystem: "docker"
