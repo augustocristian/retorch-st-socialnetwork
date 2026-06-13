@@ -15,7 +15,23 @@ Both suites share the same RETORCH resource model and run under the same CI pipe
 
 ## SUT architecture
 
-The SUT is vendored in [`sut/`](sut/) (a copy of [`docker-socialnetwork`](https://github.com/augustocristian/docker-socialnetwork), with local bug fixes applied — see `sut/CLAUDE.md`). It is a Thrift-RPC microservice application fronted by an **OpenResty/Nginx gateway** (`nginx-thrift`, port 8080) whose Lua scripts translate HTTP requests into Thrift calls. The root [`docker-compose.yml`](docker-compose.yml) runs the prebuilt `deathstarbench/social-network-microservices:latest` image for the Thrift services and mounts `sut/config`, `sut/nginx-web-server`, `sut/gen-lua` and `sut/docker/openresty-thrift/lua-thrift` into the `nginx-thrift` container. The deploy scripts start it and wait up to 300 s for the gateway to serve the DeathStar UI. **Default local URL:** `http://localhost:8080`.
+The SUT is vendored in [`sut/`](sut/) — a copy of [`docker-socialnetwork`](https://github.com/augustocristian/docker-socialnetwork) with local bug fixes applied (see `sut/CLAUDE.md`). It is a Thrift-RPC microservice application fronted by an **OpenResty/Nginx gateway** (`nginx-thrift`, port 8080) whose Lua scripts translate HTTP requests into Thrift calls. **Default local URL:** `http://localhost:8080`.
+
+### Docker images
+
+The root [`docker-compose.yml`](docker-compose.yml) **builds all images from `sut/`** rather than pulling prebuilt ones:
+
+| Image tag | Built from | Used by |
+|---|---|---|
+| `social-network-microservices:socialnetwork` | `sut/Dockerfile` (context `sut/`) | all 12 Thrift C++ services |
+| `openresty-thrift:socialnetwork` | `sut/docker/openresty-thrift/xenial/Dockerfile` (context `sut/docker/openresty-thrift`) | `nginx-thrift` |
+| `redis:socialnetwork` | `sut/docker/redis/Dockerfile` (`FROM redis:7.4.2`) | `*-redis` services |
+| `memcached:socialnetwork` | `sut/docker/memcached/Dockerfile` (`FROM memcached:1.6.38`) | `*-memcached` services |
+| `rabbitmq:socialnetwork` | `sut/docker/rabbitmq/Dockerfile` (`FROM rabbitmq:3.13.7`) | `write-home-timeline-rabbitmq` |
+| `jaeger-agent:socialnetwork` | `sut/docker/jaeger/Dockerfile` (`FROM jaegertracing/all-in-one:1.62.0`) | `jaeger-agent` |
+| `mongo:4.4.6` | pulled as-is (already pinned) | `*-mongodb` services |
+
+Pinning base-image versions in these `sut/docker/**/Dockerfile`s — instead of `:latest`/untagged images in `docker-compose.yml` — lets the `/sut/**/*` entry in `.github/dependabot.yml` track and bump them automatically, same as the other vendored Dockerfiles. `nginx-thrift` additionally mounts `sut/config`, `sut/nginx-web-server`, `sut/gen-lua` and `sut/docker/openresty-thrift/lua-thrift`. The first `docker compose up` is slow because `social-network-microservices` is a from-source C++ build; the deploy scripts wait up to 300 s for the gateway to come up.
 
 ### Microservice topology
 
@@ -45,6 +61,8 @@ All Thrift services listen on port 9090 internally and connect on the Docker net
 - **Compose post** → `compose-post-service` fans out: `unique-id` (post id) → `text`/`url-shorten`/`user-mention` (enrichment) → `post-storage` (persist) → `user-timeline` (author's timeline) → `home-timeline` (each follower's feed). The home-timeline write reads the author's followers from `social-graph-service`.
 - **Read user-timeline** → `user-timeline-service` returns the author's own posts.
 - **Read home-timeline** → `home-timeline-service` returns the fan-out feed of the users you follow (never your own posts).
+
+> `write-home-timeline-service`/`-rabbitmq` run but stay **unused**: `WriteHomeTimelineService`'s `add_subdirectory` is commented out in `sut/src/CMakeLists.txt`, so the binary is never built. The home-timeline fan-out above goes **compose-post-service → home-timeline-service → home-timeline-redis** directly.
 
 ### Endpoint catalog
 
@@ -84,8 +102,6 @@ Two route trees exist. `/api/*` is the **browser UI** surface (JWT-cookie auth, 
 - **Home-timeline is asynchronous & excludes own posts.** A composed post reaches the author's **user-timeline** immediately but appears in followers' **home-timeline** only after fan-out. The browser post test therefore verifies via `profile.html` (user-timeline), and the API home-timeline test polls.
 - **Empty home-timeline returns `{}`** (a JSON object, not `[]`); `BaseApiClass.getJsonArray()` tolerates this.
 - **Snowflake user ids** are 64-bit (e.g. `1199044181654814720`) — exact in Java `long`; the `/api/*` Lua uses Lua's double-based `tonumber` consistently for reads and writes, so it stays self-consistent.
-
-> The root `docker-compose.yml` is an adaptation of `sut/docker-compose.yml` (prebuilt images, `${TJOB_NAME}`-prefixed container names, config/Lua/gen-lua mounted from `sut/`). The `WriteHomeTimelineService` binary does **not** exist in the `deathstarbench/social-network-microservices:latest` image; home-timeline fan-out happens **compose-post-service → home-timeline-service → home-timeline-redis** directly.
 
 ---
 

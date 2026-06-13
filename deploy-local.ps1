@@ -66,6 +66,12 @@ if ($existingNetworks -notcontains $NETWORK_NAME) {
     Write-OK "Network '$NETWORK_NAME' already exists."
 }
 
+# ── Build images ────────────────────────────────────────────────────────────────
+Write-Step "Building images from sut/ (this is slow on the first run)..."
+docker compose -f $COMPOSE_FILE --ansi never -p $TJOB_NAME build
+if ($LASTEXITCODE -ne 0) { Write-Fail "docker compose build failed." }
+Write-OK "Images built."
+
 # ── Start containers ──────────────────────────────────────────────────────────
 Write-Step "Starting containers (project: '$TJOB_NAME', nginx port: $Port)..."
 docker compose -f $COMPOSE_FILE --ansi never -p $TJOB_NAME up -d

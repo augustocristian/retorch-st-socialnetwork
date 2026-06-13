@@ -57,6 +57,11 @@ else
     ok "Network '$NETWORK_NAME' already exists."
 fi
 
+# ── Build images ────────────────────────────────────────────────────────────────
+step "Building images from sut/ (this is slow on the first run)..."
+docker compose -f "$COMPOSE_FILE" --ansi never -p "$TJOB_NAME" build
+ok "Images built."
+
 # ── Start containers ──────────────────────────────────────────────────────────
 step "Starting containers (project: '$TJOB_NAME', nginx port: $PORT)..."
 docker compose -f "$COMPOSE_FILE" --ansi never -p "$TJOB_NAME" up -d

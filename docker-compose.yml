@@ -1,7 +1,10 @@
 services:
 
   social-graph-service:
-    image: deathstarbench/social-network-microservices:latest
+    build:
+      context: ./sut
+      dockerfile: Dockerfile
+    image: social-network-microservices:socialnetwork
     container_name: ${TJOB_NAME}-social-graph-service
     hostname: social-graph-service
     depends_on:
@@ -23,7 +26,9 @@ services:
       - jenkins_network
 
   social-graph-redis:
-    image: redis
+    build:
+      context: ./sut/docker/redis
+    image: redis:socialnetwork
     container_name: ${TJOB_NAME}-social-graph-redis
     hostname: social-graph-redis
     restart: always
@@ -31,7 +36,9 @@ services:
       - jenkins_network
 
   home-timeline-redis:
-    image: redis
+    build:
+      context: ./sut/docker/redis
+    image: redis:socialnetwork
     container_name: ${TJOB_NAME}-home-timeline-redis
     hostname: home-timeline-redis
     restart: always
@@ -39,7 +46,10 @@ services:
       - jenkins_network
 
   compose-post-service:
-    image: deathstarbench/social-network-microservices:latest
+    build:
+      context: ./sut
+      dockerfile: Dockerfile
+    image: social-network-microservices:socialnetwork
     container_name: ${TJOB_NAME}-compose-post-service
     hostname: compose-post-service
     restart: always
@@ -52,7 +62,9 @@ services:
       - jenkins_network
 
   compose-post-redis:
-    image: redis
+    build:
+      context: ./sut/docker/redis
+    image: redis:socialnetwork
     container_name: ${TJOB_NAME}-compose-post-redis
     hostname: compose-post-redis
     restart: always
@@ -60,7 +72,10 @@ services:
       - jenkins_network
 
   post-storage-service:
-    image: deathstarbench/social-network-microservices:latest
+    build:
+      context: ./sut
+      dockerfile: Dockerfile
+    image: social-network-microservices:socialnetwork
     container_name: ${TJOB_NAME}-post-storage-service
     hostname: post-storage-service
     restart: always
@@ -74,7 +89,9 @@ services:
       - jenkins_network
 
   post-storage-memcached:
-    image: memcached
+    build:
+      context: ./sut/docker/memcached
+    image: memcached:socialnetwork
     container_name: ${TJOB_NAME}-post-storage-memcached
     hostname: post-storage-memcached
     restart: always
@@ -90,7 +107,10 @@ services:
       - jenkins_network
 
   user-timeline-service:
-    image: deathstarbench/social-network-microservices:latest
+    build:
+      context: ./sut
+      dockerfile: Dockerfile
+    image: social-network-microservices:socialnetwork
     container_name: ${TJOB_NAME}-user-timeline-service
     hostname: user-timeline-service
     restart: always
@@ -104,7 +124,9 @@ services:
       - jenkins_network
 
   user-timeline-redis:
-    image: redis
+    build:
+      context: ./sut/docker/redis
+    image: redis:socialnetwork
     container_name: ${TJOB_NAME}-user-timeline-redis
     hostname: user-timeline-redis
     restart: always
@@ -120,7 +142,10 @@ services:
       - jenkins_network
 
   url-shorten-service:
-    image: deathstarbench/social-network-microservices:latest
+    build:
+      context: ./sut
+      dockerfile: Dockerfile
+    image: social-network-microservices:socialnetwork
     container_name: ${TJOB_NAME}-url-shorten-service
     hostname: url-shorten-service
     restart: always
@@ -134,7 +159,9 @@ services:
       - jenkins_network
 
   url-shorten-memcached:
-    image: memcached
+    build:
+      context: ./sut/docker/memcached
+    image: memcached:socialnetwork
     container_name: ${TJOB_NAME}-url-shorten-memcached
     hostname: url-shorten-memcached
     restart: always
@@ -150,7 +177,10 @@ services:
       - jenkins_network
 
   user-service:
-    image: deathstarbench/social-network-microservices:latest
+    build:
+      context: ./sut
+      dockerfile: Dockerfile
+    image: social-network-microservices:socialnetwork
     container_name: ${TJOB_NAME}-user-service
     hostname: user-service
     restart: always
@@ -164,7 +194,9 @@ services:
       - jenkins_network
 
   user-memcached:
-    image: memcached
+    build:
+      context: ./sut/docker/memcached
+    image: memcached:socialnetwork
     container_name: ${TJOB_NAME}-user-memcached
     hostname: user-memcached
     restart: always
@@ -180,7 +212,10 @@ services:
       - jenkins_network
 
   media-service:
-    image: deathstarbench/social-network-microservices:latest
+    build:
+      context: ./sut
+      dockerfile: Dockerfile
+    image: social-network-microservices:socialnetwork
     container_name: ${TJOB_NAME}-media-service
     hostname: media-service
     depends_on:
@@ -194,7 +229,9 @@ services:
       - jenkins_network
 
   media-memcached:
-    image: memcached
+    build:
+      context: ./sut/docker/memcached
+    image: memcached:socialnetwork
     container_name: ${TJOB_NAME}-media-memcached
     hostname: media-memcached
     restart: always
@@ -210,7 +247,10 @@ services:
       - jenkins_network
 
   text-service:
-    image: deathstarbench/social-network-microservices:latest
+    build:
+      context: ./sut
+      dockerfile: Dockerfile
+    image: social-network-microservices:socialnetwork
     container_name: ${TJOB_NAME}-text-service
     hostname: text-service
     restart: always
@@ -223,7 +263,10 @@ services:
       - jenkins_network
 
   unique-id-service:
-    image: deathstarbench/social-network-microservices:latest
+    build:
+      context: ./sut
+      dockerfile: Dockerfile
+    image: social-network-microservices:socialnetwork
     container_name: ${TJOB_NAME}-unique-id-service
     hostname: unique-id-service
     restart: always
@@ -236,7 +279,10 @@ services:
       - jenkins_network
 
   user-mention-service:
-    image: deathstarbench/social-network-microservices:latest
+    build:
+      context: ./sut
+      dockerfile: Dockerfile
+    image: social-network-microservices:socialnetwork
     container_name: ${TJOB_NAME}-user-mention-service
     hostname: user-mention-service
     depends_on:
@@ -249,7 +295,10 @@ services:
       - jenkins_network
 
   home-timeline-service:
-    image: deathstarbench/social-network-microservices:latest
+    build:
+      context: ./sut
+      dockerfile: Dockerfile
+    image: social-network-microservices:socialnetwork
     container_name: ${TJOB_NAME}-home-timeline-service
     hostname: home-timeline-service
     depends_on:
@@ -262,7 +311,10 @@ services:
       - jenkins_network
 
   write-home-timeline-service:
-    image: deathstarbench/social-network-microservices:latest
+    build:
+      context: ./sut
+      dockerfile: Dockerfile
+    image: social-network-microservices:socialnetwork
     container_name: ${TJOB_NAME}-write-home-timeline-service
     hostname: write-home-timeline-service
     depends_on:
@@ -276,7 +328,9 @@ services:
       - jenkins_network
 
   write-home-timeline-rabbitmq:
-    image: rabbitmq
+    build:
+      context: ./sut/docker/rabbitmq
+    image: rabbitmq:socialnetwork
     container_name: ${TJOB_NAME}-write-home-timeline-rabbitmq
     hostname: write-home-timeline-rabbitmq
     restart: always
@@ -284,7 +338,10 @@ services:
       - jenkins_network
 
   nginx-thrift:
-    image: yg397/openresty-thrift:xenial
+    build:
+      context: ./sut/docker/openresty-thrift
+      dockerfile: xenial/Dockerfile
+    image: openresty-thrift:socialnetwork
     container_name: ${TJOB_NAME}-nginx-thrift
     hostname: nginx-thrift
     ports:
@@ -303,7 +360,9 @@ services:
       - jenkins_network
 
   jaeger-agent:
-    image: jaegertracing/all-in-one:latest
+    build:
+      context: ./sut/docker/jaeger
+    image: jaeger-agent:socialnetwork
     container_name: ${TJOB_NAME}-jaeger-agent
     hostname: jaeger-agent
     restart: always
