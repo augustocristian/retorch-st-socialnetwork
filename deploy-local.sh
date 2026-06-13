@@ -11,9 +11,7 @@ set -euo pipefail
 
 TJOB_NAME="default"
 NETWORK_NAME="jenkins_network"
-SUT_REPO="https://github.com/augustocristian/docker-socialnetwork"
-SUT_DIR="docker-socialnetwork"
-COMPOSE_FILE="docker-socialnetwork/docker-compose.yml"
+COMPOSE_FILE="docker-compose.yml"
 MAX_WAIT_SECS=300
 POLL_INTERVAL=5
 PORT=8080
@@ -35,12 +33,12 @@ done
 # ── Prerequisites ──────────────────────────────────────────────────────────────
 step "Checking prerequisites..."
 command -v docker >/dev/null 2>&1 || fail "docker is not installed."
-command -v git    >/dev/null 2>&1 || fail "git is not installed."
 docker info >/dev/null 2>&1       || fail "Docker daemon is not running."
 ok "Prerequisites satisfied."
 
 # ── Export env vars for docker compose ────────────────────────────────────────
 export TJOB_NAME
+export frontend_port="$PORT"
 
 # ── Teardown mode ──────────────────────────────────────────────────────────────
 if $DOWN; then
@@ -57,16 +55,6 @@ if ! docker network ls --format "{{.Name}}" | grep -qx "$NETWORK_NAME"; then
     ok "Network '$NETWORK_NAME' created."
 else
     ok "Network '$NETWORK_NAME' already exists."
-fi
-
-# ── Clone SUT if not present ──────────────────────────────────────────────────
-step "Checking '$SUT_DIR'..."
-if [[ ! -d "$SUT_DIR" ]]; then
-    step "Cloning $SUT_REPO..."
-    git clone "$SUT_REPO"
-    ok "Cloned '$SUT_DIR'."
-else
-    ok "'$SUT_DIR' already present, skipping clone."
 fi
 
 # ── Start containers ──────────────────────────────────────────────────────────

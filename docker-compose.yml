@@ -10,7 +10,7 @@ services:
     restart: always
     entrypoint: SocialGraphService
     volumes:
-      - ./docker-socialnetwork/config:/social-network-microservices/config
+      - ./sut/config:/social-network-microservices/config
     networks:
       - jenkins_network
 
@@ -47,7 +47,7 @@ services:
       - jaeger-agent
     entrypoint: ComposePostService
     volumes:
-      - ./docker-socialnetwork/config:/social-network-microservices/config
+      - ./sut/config:/social-network-microservices/config
     networks:
       - jenkins_network
 
@@ -69,7 +69,7 @@ services:
       - post-storage-mongodb
     entrypoint: PostStorageService
     volumes:
-      - ./docker-socialnetwork/config:/social-network-microservices/config
+      - ./sut/config:/social-network-microservices/config
     networks:
       - jenkins_network
 
@@ -99,7 +99,7 @@ services:
       - user-timeline-mongodb
     entrypoint: UserTimelineService
     volumes:
-      - ./docker-socialnetwork/config:/social-network-microservices/config
+      - ./sut/config:/social-network-microservices/config
     networks:
       - jenkins_network
 
@@ -129,7 +129,7 @@ services:
       - jaeger-agent
       - url-shorten-mongodb
     volumes:
-      - ./docker-socialnetwork/config:/social-network-microservices/config
+      - ./sut/config:/social-network-microservices/config
     networks:
       - jenkins_network
 
@@ -159,7 +159,7 @@ services:
       - user-mongodb
     entrypoint: UserService
     volumes:
-      - ./docker-socialnetwork/config:/social-network-microservices/config
+      - ./sut/config:/social-network-microservices/config
     networks:
       - jenkins_network
 
@@ -189,7 +189,7 @@ services:
     restart: always
     entrypoint: MediaService
     volumes:
-      - ./docker-socialnetwork/config:/social-network-microservices/config
+      - ./sut/config:/social-network-microservices/config
     networks:
       - jenkins_network
 
@@ -218,7 +218,7 @@ services:
       - jaeger-agent
     entrypoint: TextService
     volumes:
-      - ./docker-socialnetwork/config:/social-network-microservices/config
+      - ./sut/config:/social-network-microservices/config
     networks:
       - jenkins_network
 
@@ -231,7 +231,7 @@ services:
       - jaeger-agent
     entrypoint: UniqueIdService
     volumes:
-      - ./docker-socialnetwork/config:/social-network-microservices/config
+      - ./sut/config:/social-network-microservices/config
     networks:
       - jenkins_network
 
@@ -244,7 +244,7 @@ services:
     restart: always
     entrypoint: UserMentionService
     volumes:
-      - ./docker-socialnetwork/config:/social-network-microservices/config
+      - ./sut/config:/social-network-microservices/config
     networks:
       - jenkins_network
 
@@ -257,7 +257,7 @@ services:
     restart: always
     entrypoint: HomeTimelineService
     volumes:
-      - ./docker-socialnetwork/config:/social-network-microservices/config
+      - ./sut/config:/social-network-microservices/config
     networks:
       - jenkins_network
 
@@ -271,7 +271,7 @@ services:
     restart: always
     entrypoint: WriteHomeTimelineService
     volumes:
-      - ./docker-socialnetwork/config:/social-network-microservices/config
+      - ./sut/config:/social-network-microservices/config
     networks:
       - jenkins_network
 
@@ -293,12 +293,12 @@ services:
       - jaeger-agent
     restart: always
     volumes:
-      - ./docker-socialnetwork/nginx-web-server/lua-scripts:/usr/local/openresty/nginx/lua-scripts
-      - ./docker-socialnetwork/nginx-web-server/pages:/usr/local/openresty/nginx/pages
-      - ./docker-socialnetwork/nginx-web-server/conf/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
-      - ./docker-socialnetwork/nginx-web-server/jaeger-config.json:/usr/local/openresty/nginx/jaeger-config.json
-      - ./docker-socialnetwork/gen-lua:/gen-lua
-      - ./docker-socialnetwork/docker/openresty-thrift/lua-thrift:/usr/local/openresty/lualib/thrift
+      - ./sut/nginx-web-server/lua-scripts:/usr/local/openresty/nginx/lua-scripts
+      - ./sut/nginx-web-server/pages:/usr/local/openresty/nginx/pages
+      - ./sut/nginx-web-server/conf/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ./sut/nginx-web-server/jaeger-config.json:/usr/local/openresty/nginx/jaeger-config.json
+      - ./sut/gen-lua:/gen-lua
+      - ./sut/docker/openresty-thrift/lua-thrift:/usr/local/openresty/lualib/thrift
     networks:
       - jenkins_network
 

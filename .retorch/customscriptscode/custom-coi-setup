@@ -1,5 +1,2 @@
-#Fetch the Social Network SUT
+"$SCRIPTS_FOLDER/printLog.sh" "DEBUG" "COI-set-up" "SUT is vendored under sut/, no fetch required"
 
-"$SCRIPTS_FOLDER/printLog.sh" "DEBUG" "COI-set-up" "Clone the Social Network SUT"
-rm -rf "$WORKSPACE/docker-socialnetwork"
-git clone https://github.com/augustocristian/docker-socialnetwork

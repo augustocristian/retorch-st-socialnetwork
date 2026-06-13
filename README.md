@@ -21,7 +21,7 @@ The Social Network is a distributed benchmark application based on [DeathStarBen
 
 ## Deployment
 
-The deploy scripts clone the SUT automatically from `https://github.com/augustocristian/docker-socialnetwork` into `docker-socialnetwork/` if not already present, create the `jenkins_network` Docker network, start all containers, and wait up to 300 seconds for the Nginx gateway to be ready.
+The SUT is vendored in the [`sut/`](sut/) directory of this repository. The deploy scripts create the `jenkins_network` Docker network, start all containers using the root `docker-compose.yml` (which mounts config, Lua scripts and generated Thrift bindings from `sut/`), and wait up to 300 seconds for the Nginx gateway to be ready.
 
 ### Windows (PowerShell)
 

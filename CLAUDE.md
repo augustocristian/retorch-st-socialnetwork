@@ -15,7 +15,7 @@ Both suites share the same RETORCH resource model and run under the same CI pipe
 
 ## SUT architecture
 
-The SUT lives in `docker-socialnetwork/` (cloned from `https://github.com/augustocristian/docker-socialnetwork`). It is a Thrift-RPC microservice application fronted by an **OpenResty/Nginx gateway** (`nginx-thrift`, port 8080) whose Lua scripts translate HTTP requests into Thrift calls. The deploy scripts start it and wait up to 300 s for the gateway to serve the DeathStar UI. **Default local URL:** `http://localhost:8080`.
+The SUT is vendored in [`sut/`](sut/) (a copy of [`docker-socialnetwork`](https://github.com/augustocristian/docker-socialnetwork), with local bug fixes applied — see `sut/CLAUDE.md`). It is a Thrift-RPC microservice application fronted by an **OpenResty/Nginx gateway** (`nginx-thrift`, port 8080) whose Lua scripts translate HTTP requests into Thrift calls. The root [`docker-compose.yml`](docker-compose.yml) runs the prebuilt `deathstarbench/social-network-microservices:latest` image for the Thrift services and mounts `sut/config`, `sut/nginx-web-server`, `sut/gen-lua` and `sut/docker/openresty-thrift/lua-thrift` into the `nginx-thrift` container. The deploy scripts start it and wait up to 300 s for the gateway to serve the DeathStar UI. **Default local URL:** `http://localhost:8080`.
 
 ### Microservice topology
 
@@ -80,12 +80,12 @@ Two route trees exist. `/api/*` is the **browser UI** surface (JWT-cookie auth, 
 ### Known SUT bugs & quirks (each handled in the tests)
 
 - **Empty-`ZADD` 500.** `social-graph-service` caches follower/followee lookups with Redis `ZADD`; when the set is **empty** Redis rejects the command and the call returns HTTP 500. This affects (a) **compose** for an author with no followers (the home-timeline fan-out calls `GetFollowers`), and (b) **`get_follower`/`get_followee`** when the requester has none. Tests always arrange ≥1 element: compose tests give the author a follower; the unfollow test follows two users and only unfollows one.
-- **Unfollow file-download bug — FIXED in this repo.** Upstream `unfollow.lua` did not redirect on success, so the response fell through with `Content-Type: application/octet-stream`, making the browser treat the form submit as a **file download (save-file dialog)** and the unfollow never applied via the UI. Fixed by appending `ngx.redirect("../../contact.html")` (mirroring `follow.lua`) in `docker-socialnetwork/nginx-web-server/lua-scripts/api/user/unfollow.lua`. Requires an `nginx-thrift` restart to reload (OpenResty caches Lua).
+- **Unfollow file-download bug — FIXED in this repo.** Upstream `unfollow.lua` did not redirect on success, so the response fell through with `Content-Type: application/octet-stream`, making the browser treat the form submit as a **file download (save-file dialog)** and the unfollow never applied via the UI. Fixed by appending `ngx.redirect("../../contact.html")` (mirroring `follow.lua`) in `sut/nginx-web-server/lua-scripts/api/user/unfollow.lua`. Requires an `nginx-thrift` restart to reload (OpenResty caches Lua).
 - **Home-timeline is asynchronous & excludes own posts.** A composed post reaches the author's **user-timeline** immediately but appears in followers' **home-timeline** only after fan-out. The browser post test therefore verifies via `profile.html` (user-timeline), and the API home-timeline test polls.
 - **Empty home-timeline returns `{}`** (a JSON object, not `[]`); `BaseApiClass.getJsonArray()` tolerates this.
 - **Snowflake user ids** are 64-bit (e.g. `1199044181654814720`) — exact in Java `long`; the `/api/*` Lua uses Lua's double-based `tonumber` consistently for reads and writes, so it stays self-consistent.
 
-> The upstream SUT `docker-compose.yml` is used as-is. The `WriteHomeTimelineService` binary does **not** exist in the `deathstarbench/social-network-microservices:latest` image; home-timeline fan-out happens **compose-post-service → home-timeline-service → home-timeline-redis** directly.
+> The root `docker-compose.yml` is an adaptation of `sut/docker-compose.yml` (prebuilt images, `${TJOB_NAME}`-prefixed container names, config/Lua/gen-lua mounted from `sut/`). The `WriteHomeTimelineService` binary does **not** exist in the `deathstarbench/social-network-microservices:latest` image; home-timeline fan-out happens **compose-post-service → home-timeline-service → home-timeline-redis** directly.
 
 ---
 
@@ -196,8 +196,8 @@ mvn test -Dtest=TestApiSocialGraph     # one class
 ```
 CI runs per-method via `.retorch/scripts/tjoblifecycles/tjob-testexecution.sh <TJOB> <STAGE> <SUT_URL> "<Class#method>"`.
 
-> After editing any SUT Lua script, restart the gateway so OpenResty reloads it:
-> `docker restart docker-socialnetwork-nginx-thrift-1`.
+> After editing any SUT Lua script under `sut/nginx-web-server/lua-scripts/`, restart the gateway so OpenResty reloads it:
+> `docker restart default-nginx-thrift` (container name is `${TJOB_NAME}-nginx-thrift`; `TJOB_NAME=default` for `deploy-local.*`).
 
 ---
 
