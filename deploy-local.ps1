@@ -19,9 +19,7 @@ $ErrorActionPreference = "Stop"
 
 $TJOB_NAME     = "default"
 $NETWORK_NAME  = "jenkins_network"
-$SUT_REPO      = "https://github.com/augustocristian/docker-socialnetwork"
-$SUT_DIR       = "docker-socialnetwork"
-$COMPOSE_FILE  = "docker-socialnetwork/docker-compose.yml"
+$COMPOSE_FILE  = "docker-compose.yml"
 $MAX_WAIT_SECS = 300
 $POLL_INTERVAL = 5
 
@@ -42,13 +40,11 @@ $ErrorActionPreference = "Stop"
 if (-not $dockerOk) {
     Write-Fail "Docker daemon is not running. Please start Docker Desktop."
 }
-if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-    Write-Fail "git is not installed or not in PATH."
-}
 Write-OK "Prerequisites satisfied."
 
 # ── Export env vars for docker compose ────────────────────────────────────────
-$env:TJOB_NAME = $TJOB_NAME
+$env:TJOB_NAME    = $TJOB_NAME
+$env:frontend_port = $Port
 
 # ── Teardown mode ──────────────────────────────────────────────────────────────
 if ($Down) {
@@ -68,17 +64,6 @@ if ($existingNetworks -notcontains $NETWORK_NAME) {
     Write-OK "Network '$NETWORK_NAME' created."
 } else {
     Write-OK "Network '$NETWORK_NAME' already exists."
-}
-
-# ── Clone SUT if not present ──────────────────────────────────────────────────
-Write-Step "Checking '$SUT_DIR'..."
-if (-not (Test-Path $SUT_DIR)) {
-    Write-Step "Cloning $SUT_REPO..."
-    git clone $SUT_REPO
-    if ($LASTEXITCODE -ne 0) { Write-Fail "Failed to clone '$SUT_REPO'." }
-    Write-OK "Cloned '$SUT_DIR'."
-} else {
-    Write-OK "'$SUT_DIR' already present, skipping clone."
 }
 
 # ── Start containers ──────────────────────────────────────────────────────────
