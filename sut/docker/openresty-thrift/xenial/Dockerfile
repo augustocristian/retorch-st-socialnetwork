@@ -7,7 +7,7 @@ LABEL maintainer="Yu Gan <yg397@cornell.edu>"
 
 # Docker Build Arguments
 ARG RESTY_VERSION="1.15.8.1rc1"
-ARG RESTY_LUAROCKS_VERSION="3.5.0"
+ARG RESTY_LUAROCKS_VERSION="3.11.1"
 ARG RESTY_OPENSSL_VERSION="1.1.0j"
 ARG RESTY_PCRE_VERSION="8.42"
 ARG JAEGER_TRACING_VERSION="0.4.2"
@@ -122,7 +122,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && make install \
     && cd /tmp \
     && rm -rf lua-resty-hmac \
-
   ### Add Jaeger plugin
     && curl -fSL https://github.com/jaegertracing/jaeger-client-cpp/archive/refs/tags/v${JAEGER_TRACING_VERSION}.tar.gz -o v${JAEGER_TRACING_VERSION}.tar.gz \
     && tar xf v${JAEGER_TRACING_VERSION}.tar.gz \
@@ -202,8 +201,15 @@ RUN cd /usr/local/openresty/lualib/thrift/src \
 
 ENV LUA_PATH=$LUA_PATH;/gen-lua/?.lua
 
-RUN luarocks install long \
-    && luarocks install lua-resty-jwt \
+# luarocks.org's manifest is too large for LuaJIT's bytecode loader to parse
+# (exceeds the 65536-constants-per-function limit), so `luarocks search`/`install`
+# without an explicit source fails. Install lua-resty-jwt directly from its repo.
+RUN cd /tmp \
+    && git clone --depth 1 --branch v0.1.11 https://github.com/SkyLothar/lua-resty-jwt.git \
+    && cd lua-resty-jwt \
+    && luarocks make --deps-mode=none \
+    && cd /tmp \
+    && rm -rf lua-resty-jwt \
     && ldconfig
 
 
