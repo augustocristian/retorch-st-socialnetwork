@@ -28,7 +28,7 @@
 
 		<junit-jupiter-api.version>6.1.0</junit-jupiter-api.version>
 
-		<selenium-java.version>4.44.0</selenium-java.version>
+		<selenium-java.version>4.45.0</selenium-java.version>
 
 		<selema.version>4.1.0</selema.version>
 
@@ -289,7 +289,7 @@
 					<plugin>
 						<groupId>org.sonatype.central</groupId>
 						<artifactId>central-publishing-maven-plugin</artifactId>
-						<version>0.10.0</version>
+						<version>0.11.0</version>
 						<extensions>true</extensions>
 						<configuration>
 							<publishingServerId>central</publishingServerId>
